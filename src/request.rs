@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::fmt::Display;
 use reqwest::header::HeaderMap;
 use reqwest::{Proxy, Url};
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use crate::error::ErrorType;
+use crate::error::ErrorType::RequestError;
 
 
 pub enum DownloadStat {
@@ -77,7 +78,7 @@ impl NexusRequest {
 impl NexusRequest {
 
     /// 带请求头的N网定向包
-    pub async fn request(&self) -> Result<Response, Box<dyn Error>> {
+    pub async fn request(&self) -> Result<Response, ErrorType> {
         let mut headers = HeaderMap::new();
         headers.insert("sec-fetch-site", "same-origin".parse().unwrap());
         headers.insert("x-requested-with", "XMLHttpRequest".parse().unwrap());
@@ -94,10 +95,10 @@ impl NexusRequest {
         // 代理
         let client = match self.proxy.clone() {
             Some(proxy) => {
-                let p = Proxy::all(proxy)?;
-                client.proxy(p).build()?
+                let p = Proxy::all(proxy).map_err(|v| { RequestError(v.to_string()) })?;
+                client.proxy(p).build().map_err(|v| { RequestError(v.to_string()) })?
             }
-            None => client.build()?,
+            None => client.build().map_err(|v| { RequestError(v.to_string()) })?,
         };
 
         // 请求方式
@@ -105,16 +106,16 @@ impl NexusRequest {
             true => client.post(url),
             false => client.get(url),
         };
-        let res = cli.headers(headers).send().await?;
+        let res = cli.headers(headers).send().await.map_err(|v| { RequestError(v.to_string()) })?;
         Ok(res)
     }
 
     /// 获取mod下载统计
-    pub async fn get_download_csv(&mut self, game_id: u32, _type: DownloadStat) -> Result<HashMap<String, (String, String, String)>, Box<dyn Error>>  {
+    pub async fn get_download_csv(&mut self, game_id: u32, _type: DownloadStat) -> Result<HashMap<String, (String, String, String)>, ErrorType>  {
         self.set_url(format!("https://staticstats.nexusmods.com/live_download_counts/{}/{}.csv", _type, game_id));
         self.set_post(false);
 
-        let csv = self.request().await?.text().await?;
+        let csv = self.request().await?.text().await.map_err(|v| { RequestError(v.to_string()) })?;
         let mut downloads_count = HashMap::new();
 
         for line in csv.lines() {
@@ -138,21 +139,21 @@ impl NexusRequest {
     }
 
     /// 获取游戏列表
-    pub async fn get_games_json(&mut self) -> Result<Vec<Game>, Box<dyn Error>>  {
+    pub async fn get_games_json(&mut self) -> Result<Vec<Game>, ErrorType>  {
         self.set_url("https://data.nexusmods.com/file/nexus-data/games.json");
         self.set_post(false);
         let v = self.request().await?;
-        let res = v.json::<Vec<Game>>().await?;
+        let res = v.json::<Vec<Game>>().await.map_err(|v| { RequestError(v.to_string()) })?;
         Ok(res)
     }
 
     /// 获取文件下载链接
-    pub async fn get_file_link(&mut self, game_id: u32, file_id: u32) -> Result<String, Box<dyn Error>> {
+    pub async fn get_file_link(&mut self, game_id: u32, file_id: u32) -> Result<String, ErrorType> {
         let url = format!("https://www.nexusmods.com/Core/Libs/Common/Managers/Downloads?GenerateDownloadUrl=&fid={}&game_id={}", file_id, game_id);
         self.set_url(url);
         self.set_post(true);
         let v = self.request().await?;
-        let res = v.json::<Value>().await?;
+        let res = v.json::<Value>().await.map_err(|v| { RequestError(v.to_string()) })?;
         Ok(res["url"].to_string())
     }
 

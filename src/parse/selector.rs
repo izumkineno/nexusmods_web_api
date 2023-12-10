@@ -1,5 +1,25 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ModInfo {
+    pub id: String,
+    pub image: String,
+    pub title: String,
+    pub url: String,
+    pub description: String,
+    pub category: String,
+    pub url_category: String,
+    pub upload_date: String,
+    pub last_update: String,
+    pub author: String,
+    pub uploader: String,
+    pub url_uploader: String,
+    pub size: String,
+    pub endorse_count: String,
+    pub download_count: String,
+}
+
+
 pub(crate) struct AttrName<'a> {
     /// CSS路径
     pub(crate) pos: usize,
@@ -29,8 +49,8 @@ pub(crate) const SELECT_MOD_LI: [&str; 11] = [
 pub(crate) const SELECT_MOD_LI_ATTR: [AttrName; 14] = [
     AttrName { pos: 0, name: "id", attr: "data-mod-id", txt_pos: 0 },
     AttrName { pos: 1, name: "image", attr: "src", txt_pos: 0 },
-    AttrName { pos: 2, name: "title", attr: "href", txt_pos: 0 },
-    AttrName { pos: 2, name: "url", attr: "", txt_pos: 0 },
+    AttrName { pos: 2, name: "title", attr: "", txt_pos: 0 },
+    AttrName { pos: 2, name: "url", attr: "href", txt_pos: 0 },
     AttrName { pos: 3, name: "description", attr: "", txt_pos: 0 },
     AttrName { pos: 4, name: "category", attr: "", txt_pos: 0 },
     AttrName { pos: 4, name: "url_category", attr: "href", txt_pos: 0 },
@@ -42,25 +62,6 @@ pub(crate) const SELECT_MOD_LI_ATTR: [AttrName; 14] = [
     AttrName { pos: 9, name: "size", attr: "", txt_pos: 0 },
     AttrName { pos: 10, name: "endorse_count", attr: "", txt_pos: 0 },
 ];
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ModInfo {
-    pub id: String,
-    pub image: String,
-    pub title: String,
-    pub url: String,
-    pub description: String,
-    pub category: String,
-    pub url_category: String,
-    pub upload_date: String,
-    pub last_update: String,
-    pub author: String,
-    pub uploader: String,
-    pub url_uploader: String,
-    pub size: String,
-    pub endorse_count: String,
-    pub download_count: String,
-}
 
 
 pub(crate) const IMG_LI_MAIN1: &str = "#mod_images_list_1 > li > div > a";
