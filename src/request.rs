@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::fmt::Display;
 use reqwest::header::HeaderMap;
 use reqwest::{Proxy, Url};
@@ -106,7 +107,7 @@ impl NexusRequest {
             true => client.post(url),
             false => client.get(url),
         };
-        let res = cli.headers(headers).send().await.map_err(|v| { RequestError(v.to_string()) })?;
+        let res = cli.headers(headers).send().await.map_err(|v| { RequestError(v.source().unwrap().to_string()) })?;
         Ok(res)
     }
 

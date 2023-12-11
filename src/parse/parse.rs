@@ -1,14 +1,14 @@
 use std::collections::HashMap;
-use std::error::Error;
 use chrono::DateTime;
-use scraper::{Html, Selector};
+use scraper::Html;
 use serde_json::{json, Value};
-use crate::parse::doc_to_json;
+use crate::error::ErrorType;
+use crate::parse::{doc_to_json, selector_parse_error_fix};
 use crate::parse::selector::{FILES, IMG_LI, IMG_LI_ATTR, IMG_LI_MAIN1, IMG_LI_MAIN2, SELECT_MOD_LI, SELECT_MOD_LI_ATTR, SELECT_MOD_UR};
 
 
 // 从mod_list中获取mod_info
-pub fn get_mod_info(document: String, downloads_csv: HashMap<String, (String, String, String)>) -> Result<Value, Box<dyn Error>> {
+pub fn get_mod_info(document: String, downloads_csv: HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
 
     // 属性修正闭包
     let item_fix = |name: &str, v: &mut HashMap<&str, Value>| {
@@ -40,7 +40,7 @@ pub fn get_mod_info(document: String, downloads_csv: HashMap<String, (String, St
     Ok(v)
 }
 
-pub fn get_mod_image(document: String) -> Result<Value, Box<dyn Error>> {
+pub fn get_mod_image(document: String) -> Result<Value, ErrorType> {
     let item_fix = |_name: &str, _v: &mut HashMap<&str, Value>| {};
     // 声明指针
     let item_fix: &dyn Fn(&str, &mut HashMap<&str, Value>) = &item_fix;
@@ -53,20 +53,20 @@ pub fn get_mod_image(document: String) -> Result<Value, Box<dyn Error>> {
     }))
 }
 
-pub fn get_mod_desc(document: String) -> Result<Value, Box<dyn Error>> {
+pub fn get_mod_desc(document: String) -> Result<Value, ErrorType> {
     // todo 解析权限
     let fragment = Html::parse_document(&document);
-    let sel_desc = Selector::parse("div.container.mod_description_container.condensed")?;
+    let sel_desc = selector_parse_error_fix("div.container.mod_description_container.condensed")?;
     let html = fragment.select(&sel_desc).next().unwrap().inner_html();
     Ok(json!({"description": html}))
 }
 
-pub fn get_mod_files(document: String) -> Result<Value, Box<dyn Error>> {
+pub fn get_mod_files(document: String) -> Result<Value, ErrorType> {
     let mut files = HashMap::new();
     for f in FILES {
         let fragment = Html::parse_document(&document);
-        let sel_file = Selector::parse(f[1])?;
-        let sel_file_description = Selector::parse(f[2])?;
+        let sel_file = selector_parse_error_fix(f[1])?;
+        let sel_file_description = selector_parse_error_fix(f[2])?;
 
         let file_main = fragment.select(&sel_file);
         let mut description = fragment.select(&sel_file_description);
@@ -96,9 +96,9 @@ pub fn get_mod_files(document: String) -> Result<Value, Box<dyn Error>> {
     Ok(json!(files))
 }
 
-pub fn get_game_info(document: String) -> Result<Value, Box<dyn Error>> {
+pub fn get_game_info(document: String) -> Result<Value, ErrorType> {
     let fragment = Html::parse_document(&document);
-    let sel_file = Selector::parse("#games-list > div.game-section > ul > li")?;
+    let sel_file = selector_parse_error_fix("#games-list > div.game-section > ul > li")?;
 
     let games_id = fragment.select(&sel_file).map(|v| {
         v.attr("data-game-id").unwrap_or_default()
