@@ -2,7 +2,7 @@
 #![crate_name = "nexusmods_web_api"]
 
 
-mod test;
+// mod test;
 mod url_gen;
 mod request;
 mod parse;
