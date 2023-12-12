@@ -8,7 +8,7 @@ use crate::parse::selector::{FILES, IMG_LI, IMG_LI_ATTR, IMG_LI_MAIN1, IMG_LI_MA
 
 
 // 从mod_list中获取mod_info
-pub fn get_mod_info(document: String, downloads_csv: HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
+pub fn get_mod_info(document: String, downloads_csv: &HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
 
     // 属性修正闭包
     let item_fix = |name: &str, v: &mut HashMap<&str, Value>| {

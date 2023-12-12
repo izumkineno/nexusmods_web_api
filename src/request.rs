@@ -12,14 +12,14 @@ use crate::error::ErrorType::RequestError;
 
 pub enum DownloadStat {
     MOD,
-    FIle,
+    FILE,
 }
 
 impl Display for DownloadStat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DownloadStat::MOD => write!(f, "mods"),
-            DownloadStat::FIle => write!(f, "files"),
+            DownloadStat::FILE => write!(f, "files"),
         }
     }
 
@@ -129,7 +129,7 @@ impl NexusRequest {
                     let look = fields.next().unwrap_or_default().to_string();
                     downloads_count.insert(id, (download_all, download_unique, look));
                 }
-                DownloadStat::FIle => {
+                DownloadStat::FILE => {
                     downloads_count.insert(id, (download_all, download_unique, "".to_string()));
                 }
             }
