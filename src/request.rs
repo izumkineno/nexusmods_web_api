@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Display;
+use std::time::Duration;
 use reqwest::header::HeaderMap;
-use reqwest::{Proxy, Url};
+use reqwest::Proxy;
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -46,20 +47,20 @@ pub struct NexusRequest {
     url: String,
     post: bool,
     cookie: String,
-    proxy: Option<Url>,
+    proxy: String,
 }
 
 impl NexusRequest {
-    pub fn new<T: AsRef<str>>(cookie: T, proxy: Option<Url>) -> Self {
+    pub fn new(cookie: impl AsRef<str>, proxy: impl AsRef<str>) -> Self {
         Self {
             url: "".to_string(),
             post: false,
             cookie: cookie.as_ref().to_string(),
-            proxy,
+            proxy: proxy.as_ref().to_string(),
         }
     }
 
-    pub fn set_url<T: AsRef<str>>(&mut self, url: T) {
+    pub fn set_url(&mut self, url: impl AsRef<str>) {
         self.url = url.as_ref().to_string();
     }
 
@@ -67,12 +68,12 @@ impl NexusRequest {
         self.post = post;
     }
 
-    pub fn set_cookie<T: AsRef<str>>(&mut self, cookie: T) {
+    pub fn set_cookie(&mut self, cookie: impl AsRef<str>) {
         self.cookie = cookie.as_ref().to_string();
     }
 
-    pub fn set_proxy(&mut self, proxy: Option<Url>) {
-        self.proxy = proxy;
+    pub fn set_proxy(&mut self, proxy: impl AsRef<str>) {
+        self.proxy = proxy.as_ref().to_string();
     }
 }
 
@@ -95,11 +96,11 @@ impl NexusRequest {
 
         // 代理
         let client = match self.proxy.clone() {
-            Some(proxy) => {
-                let p = Proxy::all(proxy).map_err(|v| { RequestError(v.to_string()) })?;
+            size if size.is_empty() => client.build().map_err(|v| { RequestError(v.to_string()) })?,
+            p => {
+                let p = Proxy::all(p).map_err(|v| { RequestError(v.to_string()) })?;
                 client.proxy(p).build().map_err(|v| { RequestError(v.to_string()) })?
             }
-            None => client.build().map_err(|v| { RequestError(v.to_string()) })?,
         };
 
         // 请求方式
@@ -107,7 +108,7 @@ impl NexusRequest {
             true => client.post(url),
             false => client.get(url),
         };
-        let res = cli.headers(headers).send().await.map_err(|v| { RequestError(v.source().unwrap().to_string()) })?;
+        let res = cli.timeout(Duration::from_secs(5)).headers(headers).send().await.map_err(|v| { RequestError(v.source().unwrap().to_string()) })?;
         Ok(res)
     }
 

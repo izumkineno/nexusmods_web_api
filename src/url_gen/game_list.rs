@@ -23,7 +23,7 @@ impl Display for GameListUrl {
 impl NexusRequestUrl for GameListUrl {}
 
 impl GameListUrl {
-    pub fn new<T: AsRef<str>>(name: T) -> Self {
+    pub fn new(name: impl AsRef<str>) -> Self {
         GameListUrl {
             name: name.as_ref().to_string(),
             order: Order::DESC,

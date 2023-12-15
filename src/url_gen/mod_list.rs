@@ -167,7 +167,7 @@ impl ModListUrl {
         }
     }
 
-    pub fn set_search_name<T: AsRef<str>>(&mut self, search_name: T) {
+    pub fn set_search_name(&mut self, search_name: impl AsRef<str>) {
         self.search_name = search_name.as_ref().to_string();
     }
 
