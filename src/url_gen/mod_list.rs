@@ -105,11 +105,11 @@ pub struct ModListUrl {
     /// 默认1，当前页数
     page: u32,
     /// 默认发布时间，基于什么排序
-    sort_by: SoftBy,
+    pub sort_by: SoftBy,
     /// 默认DESC，排序方式
-    order: Order,
+    pub order: Order,
     /// 时间筛选
-    time: TimePublish,
+    pub time: TimePublish,
     /// 高级筛选器 todo
     filter: Option<ModListUrlAdvFilter>,
 }
@@ -184,16 +184,48 @@ impl ModListUrl {
         self.page_size = page_size;
     }
 
-    pub fn set_sort_by(&mut self, sort_by: SoftBy) {
-        self.sort_by = sort_by;
+    pub fn set_sort_by(&mut self, sort_by: u8) {
+        let sb = match sort_by {
+            0 => SoftBy::None,
+            1 => SoftBy::DatePublished,
+            2 => SoftBy::Endorsements,
+            3 => SoftBy::Downloads,
+            4 => SoftBy::UniqueDownloads,
+            5 => SoftBy::LastUpdated,
+            6 => SoftBy::AuthorName,
+            7 => SoftBy::FileName,
+            8 => SoftBy::FileSize,
+            9 => SoftBy::Trending,
+            10 => SoftBy::LastComment,
+            11 => SoftBy::Random,
+            _ => SoftBy::None,
+        };
+        self.sort_by = sb;
     }
 
-    pub fn set_order(&mut self, order: Order) {
-        self.order = order;
+    pub fn set_order(&mut self, order: u8) {
+        let o = match order {
+            0 => Order::None,
+            1 => Order::ASC,
+            2 => Order::DESC,
+            _ => Order::None,
+        };
+        self.order = o;
     }
 
-    pub fn set_time(&mut self, time_publish: TimePublish) {
-        self.time = time_publish;
+    pub fn set_time(&mut self, time_publish: u8) {
+        let tp = match time_publish {
+            0 => TimePublish::None,
+            1 => TimePublish::OneDay,
+            2 => TimePublish::OneWeek,
+            3 => TimePublish::TwoWeek,
+            4 => TimePublish::OneMonth,
+            5 => TimePublish::OneYear,
+            6 => TimePublish::Range,
+            7 => TimePublish::All,
+            _ => TimePublish::None
+        };
+        self.time = tp;
     }
 
     pub fn set_filter(&mut self, filter: ModListUrlAdvFilter) {
