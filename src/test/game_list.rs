@@ -8,7 +8,7 @@ mod tests {
     #[tokio::test]
     async fn url_gen() {
         let url = GameListUrl::new("sky");
-        let res = url.request(COOKIE, Some(PROXY.parse().unwrap())).await.unwrap();
+        let res = url.request(COOKIE, PROXY).await.unwrap();
         dbg!(res);
     }
 }

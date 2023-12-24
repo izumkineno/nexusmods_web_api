@@ -184,6 +184,10 @@ impl ModListUrl {
         self.page_size = page_size;
     }
 
+    pub fn set_nav(&mut self, nav: bool) {
+        self.nav = nav;
+    }
+
     pub fn set_sort_by(&mut self, sort_by: u8) {
         let sb = match sort_by {
             0 => SoftBy::None,

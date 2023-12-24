@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use reqwest::Url;
 use crate::error::ErrorType;
 use crate::error::ErrorType::RequestError;
 use crate::request::NexusRequest;
