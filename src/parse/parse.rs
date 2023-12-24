@@ -8,7 +8,7 @@ use crate::parse::selector::{FILES, IMG_LI, IMG_LI_ATTR, IMG_LI_MAIN1, IMG_LI_MA
 
 
 // 从mod_list中获取mod_info
-pub fn get_mod_info(document: String, downloads_csv: &HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
+pub fn get_mod_info(document: &String, downloads_csv: &HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
 
     // 属性修正闭包
     let item_fix = |name: &str, v: &mut HashMap<&str, Value>| {
@@ -35,9 +35,30 @@ pub fn get_mod_info(document: String, downloads_csv: &HashMap<String, (String, S
     // 声明指针
     let item_fix: &dyn Fn(&str, &mut HashMap<&str, Value>) = &item_fix;
 
-    let v = doc_to_json(&document, SELECT_MOD_UR, &SELECT_MOD_LI, &SELECT_MOD_LI_ATTR, item_fix)?;
+    let mut v = doc_to_json(document, SELECT_MOD_UR, &SELECT_MOD_LI, &SELECT_MOD_LI_ATTR, item_fix)?;
+
+    let page = get_mod_info_page(document)?;
+    for x in v.as_array_mut().unwrap() {
+        x.as_object_mut().unwrap().insert("page_max".to_string(), json!(page));
+    };
 
     Ok(v)
+}
+
+pub fn get_mod_info_page(document: &String) -> Result<Value, ErrorType> {
+    let fragment = Html::parse_document(document);
+    let sel = selector_parse_error_fix("#mod-list > div.pagenav.clearfix.head-nav > div > ul > li.extra > a")?;
+    let html = fragment.select(&sel).collect::<Vec<_>>();
+    let html = html.last();
+    let html = match html {
+        None => {
+            "0".to_string()
+        }
+        Some(v) => {
+            v.inner_html()
+        }
+    };
+    Ok(json!(html.trim()))
 }
 
 pub fn get_mod_image(document: String) -> Result<Value, ErrorType> {
@@ -61,7 +82,7 @@ pub fn get_mod_desc(document: String) -> Result<Value, ErrorType> {
     Ok(json!({"description": html}))
 }
 
-pub fn get_mod_files(document: String) -> Result<Value, ErrorType> {
+pub fn get_mod_files(document: String, download_csv: HashMap<String, (String, String, String)>) -> Result<Value, ErrorType> {
     let mut files = HashMap::new();
     for f in FILES {
         let fragment = Html::parse_document(&document);
@@ -81,15 +102,27 @@ pub fn get_mod_files(document: String) -> Result<Value, ErrorType> {
             let size = v.attr("data-size").unwrap_or_default();
             let version = v.attr("data-version").unwrap_or_default();
             let date = v.attr("data-date").unwrap_or_default();
+            let dl = match download_csv.is_empty() {
+                true => {
+                    ("-1".to_string(), "-1".to_string(), "-1".to_string())
+                }
+                false => {
+                    match download_csv.get(id) {
+                        None => ("-1".to_string(), "-1".to_string(), "-1".to_string()),
+                        Some(v) => v.clone(),
+                    }
+                }
+            };
 
             json!({
-            "id": id,
-            "name": name,
-            "size": size,
-            "version": version,
-            "date": date,
-            "description": description
-        })
+                "id": id,
+                "name": name,
+                "size": size,
+                "version": version,
+                "date": date,
+                "description": description,
+                "dl": dl,
+            })
         }).collect::<Vec<_>>();
         files.insert(f[0], file_info_vec);
     }
@@ -103,6 +136,6 @@ pub fn get_game_info(document: String) -> Result<Value, ErrorType> {
     let games_id = fragment.select(&sel_file).map(|v| {
         v.attr("data-game-id").unwrap_or_default()
     }).collect::<Vec<_>>();
-    
+
     Ok(json!(games_id))
 }
